@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Primary Detail Compose</string>
+    <string name="title_post_list">Posts</string>
+    <string name="title_post_detail">Post Detail</string>
+    <string name="delete">Delete</string>
+    <string name="markRead">Mark Read</string>
+    <string name="multi_select_description">Select multiple to mark read or delete</string>
+    <string name="back">Back</string>
+    <string name="clear_selected">Clear selected items</string>
+    <string name="retry_button_text">Retry</string>
+    <string name="error_prefix_text">Error</string>
+    <string name="no_posts_available">No posts to show</string>
+
+    <string name="theme_title">Theme</string>
+    <string name="choose_theme">Choose theme</string>
+    <string name="title_settings">Settings</string>
+</resources>
