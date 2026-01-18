@@ -1,8 +1,5 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     id("com.android.application")
-    kotlin("android")
     kotlin("plugin.parcelize")
     kotlin("plugin.serialization")
     id("com.google.devtools.ksp")
@@ -58,7 +55,7 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_17
+        languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
         allWarningsAsErrors = true
     }
 }
