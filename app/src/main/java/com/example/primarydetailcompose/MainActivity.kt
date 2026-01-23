@@ -3,6 +3,7 @@ package com.example.primarydetailcompose
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,18 +22,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import com.example.primarydetailcompose.ui.postdetail.PostDetailScreen
-import com.example.primarydetailcompose.ui.postdetail.PostDetailViewModel
 import com.example.primarydetailcompose.ui.postlist.PostListScreen
 import com.example.primarydetailcompose.ui.postlist.PostListUiState
 import com.example.primarydetailcompose.ui.postlist.PostListViewModel
 import com.example.primarydetailcompose.ui.theme.PrimaryDetailTheme
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.android.components.ActivityComponent
 import kotlinx.serialization.Serializable
 
 /**
@@ -60,25 +57,9 @@ data class PostDetail(val postId: Long) : NavKey
 @ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
 
-    /**
-     * Entry point for accessing the [PostDetailViewModel.Factory] from the Activity context.
-     * This is required because we need to manually create the ViewModel factory for assisted injection.
-     */
-    @EntryPoint
-    @InstallIn(ActivityComponent::class)
-    interface ViewModelFactoryEntryPoint {
-        fun postDetailViewModelFactory(): PostDetailViewModel.Factory
-    }
-
     @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Retrieve the ViewModel factory via the Hilt EntryPoint
-        val postDetailViewModelFactory = EntryPointAccessors.fromActivity(
-            this,
-            ViewModelFactoryEntryPoint::class.java
-        ).postDetailViewModelFactory()
 
         setContent {
 
@@ -120,7 +101,7 @@ class MainActivity : ComponentActivity() {
                                     if (firstPost != null) {
                                         // Replace the current detail with the first post
                                         backStack.removeLastOrNull()
-                                        backStack.add(PostDetail(firstPost.id))
+                                        backStack.add(PostDetail(postId = firstPost.id))
                                     } else {
                                         // List is empty, just go back to clear detail pane (show placeholder)
                                         backStack.removeLastOrNull()
@@ -133,46 +114,44 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-
-                NavDisplay(
-                    modifier = Modifier.fillMaxSize(),
-                    backStack = backStack,
-                    onBack = { backStack.removeLastOrNull() },
-                    sceneStrategy = listDetailStrategy,
-                    entryProvider = entryProvider {
-                        entry<PostList>(
-                            metadata = ListDetailSceneStrategy.listPane(
-                                detailPlaceholder = {
-                                    Text("Select something")
-                                }
-                            )
-                        ) {
-                            PostListScreen(
-                                onPostSelected = { postId ->
-                                    backStack.add(PostDetail(postId = postId))
-                                },
-                                viewModel = postListViewModel
-                            )
-                        }
-                        entry<PostDetail>(
-                            metadata = ListDetailSceneStrategy.detailPane()
-                        ) { post ->
-                            PostDetailScreen(
-                                postId = post.postId,
-                                viewModelFactory = postDetailViewModelFactory,
-                                showBackButton = !isExpanded,
-                                onBack = { backStack.removeLastOrNull() },
-                                onDeleteConfirmed = {
-                                    // This callback is triggered after VM deletes the post.
-                                    // The LaunchedEffect above will handle the navigation/selection update
-                                    // because the list state will change.
-                                    // However, for immediate feedback or if the list update lags, we could do something here.
-                                    // But relying on state observation is more robust.
-                                }
-                            )
-                        }
-                    }
-                )
+                SharedTransitionLayout {
+                    NavDisplay(
+                        modifier = Modifier.fillMaxSize(),
+                        backStack = backStack,
+                        onBack = { backStack.removeLastOrNull() },
+                        sceneStrategy = listDetailStrategy,
+                        entryProvider = entryProvider {
+                            entry<PostList>(
+                                metadata = ListDetailSceneStrategy.listPane(
+                                    detailPlaceholder = {
+                                        Text(text = "Select something")
+                                    },
+                                ),
+                            ) {
+                                PostListScreen(
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                                    onPostSelected = { postId ->
+                                        backStack.add(PostDetail(postId = postId))
+                                    },
+                                    viewModel = postListViewModel,
+                                )
+                            }
+                            entry<PostDetail>(
+                                metadata = ListDetailSceneStrategy.detailPane(),
+                            ) { post ->
+                                PostDetailScreen(
+                                    postId = post.postId,
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                                    showBackButton = !isExpanded,
+                                    onBack = { backStack.removeLastOrNull() },
+                                    onDeleteConfirmed = {},
+                                )
+                            }
+                        },
+                    )
+                }
             }
         }
     }

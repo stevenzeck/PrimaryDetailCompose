@@ -49,14 +49,14 @@ fun PostListItem(
                 },
                 onLongClick = {
                     onPostLongPressed(post.id)
-                }
+                },
             )
             .fillMaxWidth()
-            .background(color = backgroundColor)
+            .background(color = backgroundColor),
     ) {
         Box(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(all = 16.dp),
         ) {
             Text(
                 text = post.title,

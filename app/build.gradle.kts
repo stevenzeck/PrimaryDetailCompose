@@ -1,9 +1,9 @@
 plugins {
-    id("com.android.application")
-    kotlin("plugin.parcelize")
-    kotlin("plugin.serialization")
-    id("com.google.devtools.ksp")
-    id("dagger.hilt.android.plugin")
+    alias(libs.plugins.agp)
+    alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
     alias(libs.plugins.compose.compiler)
 }
 
@@ -31,7 +31,7 @@ android {
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
         getByName("debug") {
@@ -48,15 +48,34 @@ android {
 
     buildFeatures {
         compose = true
+        resValues = true
     }
 
     namespace = "com.example.primarydetailcompose"
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md"
+        }
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 kotlin {
     compilerOptions {
         languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
         allWarningsAsErrors = true
+
+        freeCompilerArgs.addAll(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
+            "-opt-in=androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
+        )
     }
 }
 
@@ -64,36 +83,29 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(libs.kotlin.stdlib)
 
-    // ViewModel
-    implementation(libs.androidx.lifecycle.viewmodel)
-
-    // Room Database
+    // Feature Bundles
+    implementation(libs.bundles.compose)
+    implementation(libs.bundles.hilt)
+    implementation(libs.bundles.navigation3)
+    implementation(libs.bundles.retrofit)
     implementation(libs.bundles.room)
-    ksp(libs.androidx.room.compiler)
 
-    // Kotlin Coroutines
+    // Individual Architecture/UI Libs
+    implementation(libs.androidx.lifecycle.viewmodel)
+    implementation(libs.kotlin.serialization.json)
     runtimeOnly(libs.coroutines.android)
 
-    // Retrofit
-    implementation(libs.bundles.retrofit)
-
-    // Kotlin Serialziation
-    implementation(libs.kotlin.serialization.json)
-
-    // Hilt
-    implementation(libs.bundles.hilt)
+    // Annotation Processors
+    ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
 
-    // Compose
-    implementation(libs.bundles.compose)
+    // Unit Testing
+    testImplementation(libs.bundles.test.unit)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher)
 
-    // Compose Navigation3
-    implementation(libs.bundles.navigation3)
-
-    implementation(libs.material)
-
-    // Test
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.ext.junit)
-    androidTestImplementation(libs.androidx.expresso.core)
+    // Instrumentation Testing
+    androidTestImplementation(libs.bundles.test.android)
+    debugImplementation(libs.compose.ui.test.manifest)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 }

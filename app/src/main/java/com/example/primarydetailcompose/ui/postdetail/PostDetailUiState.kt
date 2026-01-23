@@ -18,7 +18,7 @@ sealed interface PostDetailUiState {
      * @property post The [Post] object to display.
      */
     data class Success(
-        val post: Post
+        val post: Post,
     ) : PostDetailUiState
 
     /**

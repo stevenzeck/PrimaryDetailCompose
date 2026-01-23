@@ -1,6 +1,8 @@
 package com.example.primarydetailcompose.ui.postlist
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,10 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -55,6 +55,8 @@ import com.example.primarydetailcompose.model.Post
 @ExperimentalFoundationApi
 @Composable
 fun PostListScreen(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     onPostSelected: (Long) -> Unit,
     viewModel: PostListViewModel = hiltViewModel(),
 ) {
@@ -73,23 +75,23 @@ fun PostListScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(text = "Delete Selected Posts?") },
-            text = { Text(text = "Are you sure you want to delete these posts? This action cannot be undone.") },
+            title = { Text(text = stringResource(id = R.string.delete_selected_posts)) },
+            text = { Text(text = stringResource(id = R.string.confirm_delete_posts)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         viewModel.deletePosts()
                         showDeleteDialog = false
-                    }
+                    },
                 ) {
-                    Text("Delete")
+                    Text(text = stringResource(id = R.string.delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(text = stringResource(id = R.string.cancel))
                 }
-            }
+            },
         )
     }
 
@@ -98,17 +100,24 @@ fun PostListScreen(
             TopAppBar(
                 title = {
                     if (isSelectionMode) {
-                        Text(text = "${selectedPostIds.size} Selected")
+                        Text(
+                            text = pluralStringResource(
+                                id = R.plurals.selected_items_count,
+                                count = selectedPostIds.size,
+                                selectedPostIds.size,
+                            ),
+                        )
                     } else {
-                        Text(text = "Posts")
+                        Text(text = stringResource(id = R.string.title_post_list))
                     }
                 },
                 navigationIcon = {
                     if (isSelectionMode) {
                         IconButton(onClick = { viewModel.clearSelection() }) {
                             Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Clear selection"
+                                painter = painterResource(id = R.drawable.close),
+                                contentDescription = stringResource(id = R.string.clear_selected),
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -117,35 +126,38 @@ fun PostListScreen(
                     if (isSelectionMode) {
                         IconButton(onClick = { viewModel.markRead() }) {
                             Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Mark as Read"
+                                painter = painterResource(id = R.drawable.check),
+                                contentDescription = stringResource(id = R.string.markRead),
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete"
+                                painter = painterResource(id = R.drawable.delete),
+                                contentDescription = stringResource(id = R.string.delete),
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        val modifier = Modifier.padding(paddingValues = padding)
 
         when (val currentState = uiState) {
             is PostListUiState.Success -> {
                 if (currentState.posts.isEmpty()) {
                     EmptyContentView(
-                        message = stringResource(R.string.no_posts_available),
-                        modifier = modifier
+                        message = stringResource(R.string.no_posts_available), modifier = modifier,
                     )
                 } else {
                     PostList(
                         listState = listState,
                         posts = currentState.posts,
                         selectedPostIds = selectedPostIds,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedVisibilityScope = animatedVisibilityScope,
                         onPostSelected = { postId ->
                             if (isSelectionMode) {
                                 viewModel.toggleSelection(postId)
@@ -157,7 +169,7 @@ fun PostListScreen(
                         onPostLongPressed = { postId ->
                             viewModel.toggleSelection(postId)
                         },
-                        modifier = modifier
+                        modifier = modifier,
                     )
                 }
             }
@@ -167,7 +179,7 @@ fun PostListScreen(
                     errorMessage = currentState.error.localizedMessage
                         ?: stringResource(R.string.error_prefix_text),
                     onRetry = { viewModel.loadPosts(forceServerRefresh = true) },
-                    modifier = modifier
+                    modifier = modifier,
                 )
             }
 
@@ -194,29 +206,37 @@ fun PostList(
     listState: LazyListState,
     posts: List<Post>,
     selectedPostIds: Set<Long>,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     onPostSelected: (Long) -> Unit,
     onPostLongPressed: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        state = listState,
-        modifier = modifier
+        state = listState, modifier = modifier,
     ) {
         items(
             items = posts,
             key = { post ->
                 post.id
-            }
+            },
         ) { post ->
-            PostListItem(
-                post = post,
-                selected = selectedPostIds.contains(post.id),
-                onPostSelected = onPostSelected,
-                onPostLongPressed = onPostLongPressed,
-                modifier = Modifier.animateItem()
-            )
+            with(sharedTransitionScope) {
+                PostListItem(
+                    post = post,
+                    selected = selectedPostIds.contains(post.id),
+                    onPostSelected = onPostSelected,
+                    onPostLongPressed = onPostLongPressed,
+                    modifier = Modifier
+                        .animateItem()
+                        .sharedElement(
+                            sharedContentState = rememberSharedContentState(key = "post-${post.id}"),
+                            animatedVisibilityScope = animatedVisibilityScope,
+                        ),
+                )
+            }
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
             )
         }
     }
@@ -228,8 +248,7 @@ fun PostList(
 @Composable
 fun LoadingView() {
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()
     }
@@ -244,25 +263,23 @@ fun LoadingView() {
  */
 @Composable
 fun ErrorStateView(
-    errorMessage: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    errorMessage: String, onRetry: () -> Unit, modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(all = 16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.error_prefix_text, errorMessage),
+            text = stringResource(id = R.string.error_prefix_text, errorMessage),
             color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(height = 16.dp))
         Button(onClick = onRetry) {
-            Text(stringResource(R.string.retry_button_text))
+            Text(text = stringResource(id = R.string.retry_button_text))
         }
     }
 }
@@ -278,8 +295,8 @@ fun EmptyContentView(message: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .padding(all = 16.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(text = message, style = MaterialTheme.typography.headlineSmall)
     }

@@ -1,16 +1,16 @@
 package com.example.primarydetailcompose.ui.postdetail
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,34 +21,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.primarydetailcompose.R
 import com.example.primarydetailcompose.model.Post
 import com.example.primarydetailcompose.ui.postlist.LoadingView
-
-/**
- * A generic ViewModel factory that allows creating ViewModels via a lambda.
- *
- * Useful for assisted injection where arguments need to be passed at runtime.
- */
-@Suppress("UNCHECKED_CAST")
-class LambdaViewModelFactory<T : ViewModel>(
-    private val create: () -> T
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return create() as T
-    }
-}
 
 /**
  * The main screen that displays the details of a selected post.
  *
  * @param postId The ID of the post to display.
- * @param viewModelFactory The factory to create the [PostDetailViewModel].
  * @param showBackButton Whether to show the back button (hidden on expanded screens).
  * @param onBack Callback triggered when the back button is pressed.
  * @param onDeleteConfirmed Callback triggered after a post is successfully deleted.
@@ -56,41 +42,42 @@ class LambdaViewModelFactory<T : ViewModel>(
 @Composable
 fun PostDetailScreen(
     postId: Long,
-    viewModelFactory: PostDetailViewModel.Factory,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     showBackButton: Boolean,
     onBack: () -> Unit = {},
     onDeleteConfirmed: () -> Unit = {},
+    viewModel: PostDetailViewModel = hiltViewModel(
+        creationCallback = { factory: PostDetailViewModel.Factory ->
+            factory.create(postId)
+        },
+    ),
 ) {
-    // Manually create the ViewModel using the factory to pass the postId
-    val viewModel: PostDetailViewModel = viewModel(
-        key = "post_detail_$postId",
-        factory = LambdaViewModelFactory { viewModelFactory.create(postId) }
-    )
     val uiState by viewModel.postDetailUiState.collectAsStateWithLifecycle()
 
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(value = false) }
 
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(text = "Delete Post?") },
-            text = { Text(text = "Are you sure you want to delete this post? This action cannot be undone.") },
+            title = { Text(text = stringResource(id = R.string.delete_post)) },
+            text = { Text(text = stringResource(id = R.string.confirm_delete_post)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         viewModel.deletePost()
                         showDeleteDialog = false
                         onDeleteConfirmed()
-                    }
+                    },
                 ) {
-                    Text("Delete")
+                    Text(text = stringResource(id = R.string.delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(text = stringResource(id = R.string.cancel))
                 }
-            }
+            },
         )
     }
 
@@ -99,7 +86,9 @@ fun PostDetailScreen(
             post = currentState.post,
             showBackButton = showBackButton,
             onBack = onBack,
-            onDeleteClicked = { showDeleteDialog = true }
+            onDeleteClicked = { showDeleteDialog = true },
+            sharedTransitionScope = sharedTransitionScope,
+            animatedVisibilityScope = animatedVisibilityScope,
         )
 
         is PostDetailUiState.Failed -> LoadingView()
@@ -122,17 +111,20 @@ fun PostDetailContent(
     showBackButton: Boolean,
     onBack: () -> Unit,
     onDeleteClicked: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Post Detail") },
+                title = { Text(text = stringResource(id = R.string.title_post_detail)) },
                 navigationIcon = {
                     if (showBackButton) {
                         IconButton(onClick = onBack) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
+                                painter = painterResource(id = R.drawable.arrow_back),
+                                contentDescription = stringResource(id = R.string.back),
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -140,23 +132,33 @@ fun PostDetailContent(
                 actions = {
                     IconButton(onClick = onDeleteClicked) {
                         Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete Post"
+                            painter = painterResource(id = R.drawable.delete),
+                            contentDescription = stringResource(id = R.string.delete_post_action),
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            Row(modifier = Modifier.padding(20.dp)) {
-                SelectionContainer {
-                    Text(text = post.title, fontSize = 30.sp)
+        with(sharedTransitionScope) {
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues = padding)
+                    .sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "post-${post.id}"),
+                        animatedVisibilityScope = animatedVisibilityScope,
+                    ),
+            ) {
+                Row(modifier = Modifier.padding(all = 20.dp)) {
+                    SelectionContainer {
+                        Text(text = post.title, fontSize = 30.sp)
+                    }
                 }
-            }
-            Row(modifier = Modifier.padding(20.dp)) {
-                SelectionContainer {
-                    Text(text = post.body, fontSize = 18.sp)
+                Row(modifier = Modifier.padding(all = 20.dp)) {
+                    SelectionContainer {
+                        Text(text = post.body, fontSize = 18.sp)
+                    }
                 }
             }
         }
