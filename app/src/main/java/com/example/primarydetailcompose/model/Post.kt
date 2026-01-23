@@ -27,19 +27,19 @@ import kotlinx.serialization.Serializable
 data class Post(
     @PrimaryKey
     @ColumnInfo(name = COLUMN_ID)
-    @SerialName("id")
+    @SerialName(value = "id")
     val id: Long,
     @ColumnInfo(name = COLUMN_USER_ID)
-    @SerialName("userId")
+    @SerialName(value = "userId")
     val userId: Int,
     @ColumnInfo(name = COLUMN_TITLE)
-    @SerialName("title")
+    @SerialName(value = "title")
     val title: String,
     @ColumnInfo(name = COLUMN_BODY)
-    @SerialName("body")
+    @SerialName(value = "body")
     val body: String,
     @ColumnInfo(name = COLUMN_READ)
-    var read: Boolean = false
+    var read: Boolean = false,
 ) : Parcelable {
     companion object {
 

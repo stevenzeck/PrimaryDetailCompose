@@ -8,6 +8,7 @@ import com.example.primarydetailcompose.ui.PostRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -23,9 +24,10 @@ import kotlinx.coroutines.launch
  * @property repository The [PostRepository] to fetch data from.
  * @property postId The ID of the post being viewed.
  */
+@HiltViewModel(assistedFactory = PostDetailViewModel.Factory::class)
 class PostDetailViewModel @AssistedInject constructor(
     private val repository: PostRepository,
-    @Assisted private val postId: Long
+    @Assisted private val postId: Long,
 ) :
     ViewModel() {
 
@@ -41,11 +43,11 @@ class PostDetailViewModel @AssistedInject constructor(
             }
             .catch { e ->
                 Log.e("PostDetailViewModel", "Error fetching post details for ID $postId", e)
-                emit(PostDetailUiState.Failed(e as Exception))
+                emit(value = PostDetailUiState.Failed(error = e as Exception))
             }
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
+                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
                 initialValue = PostDetailUiState.Loading,
             )
 
@@ -55,7 +57,7 @@ class PostDetailViewModel @AssistedInject constructor(
      * @param postId The ID of the post to mark as read.
      */
     fun markRead(postId: Long) = viewModelScope.launch {
-        repository.markRead(postId)
+        repository.markRead(postId = postId)
     }
 
     /**
@@ -63,7 +65,7 @@ class PostDetailViewModel @AssistedInject constructor(
      */
     fun deletePost() = viewModelScope.launch {
         postId.let {
-            repository.deletePost(it)
+            repository.deletePost(postId = it)
         }
     }
 

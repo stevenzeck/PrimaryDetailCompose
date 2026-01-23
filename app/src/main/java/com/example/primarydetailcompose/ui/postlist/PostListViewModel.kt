@@ -24,7 +24,7 @@ import javax.inject.Inject
 class PostListViewModel @Inject constructor(private val repository: PostRepository) : ViewModel() {
 
     // Backing property for UI state
-    private val _uiState = MutableStateFlow<PostListUiState>(PostListUiState.Loading)
+    private val _uiState = MutableStateFlow<PostListUiState>(value = PostListUiState.Loading)
 
     /**
      * The current state of the UI (Loading, Success, or Failed).
@@ -32,7 +32,7 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
     val postListUiState: StateFlow<PostListUiState> = _uiState.asStateFlow()
 
     // Backing property for selected post IDs
-    private val _selectedPostIds = MutableStateFlow<Set<Long>>(emptySet())
+    private val _selectedPostIds = MutableStateFlow<Set<Long>>(value = emptySet())
 
     /**
      * A set of IDs representing the currently selected posts.
@@ -64,7 +64,7 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
             repository.getPosts()
                 .catch { e ->
                     Log.e("PostListViewModel", "Error in posts data flow from repository", e)
-                    _uiState.value = PostListUiState.Failed(e as Exception)
+                    _uiState.value = PostListUiState.Failed(error = e as Exception)
                 }
                 .collect { posts ->
                     val currentlyEmpty = posts.isEmpty()
@@ -75,7 +75,7 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
                     if ((isInitialLoad && !initialFetchAttemptedOrSucceeded && currentlyEmpty) || (forceServerRefresh && currentlyEmpty)) {
                         Log.d(
                             "PostListViewModel",
-                            "Local database is empty or refresh forced. Fetching from server..."
+                            "Local database is empty or refresh forced. Fetching from server...",
                         )
                         _uiState.value = PostListUiState.Loading
 
@@ -84,7 +84,7 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
                             is Result.Success -> {
                                 Log.d(
                                     "PostListViewModel",
-                                    "Server fetch successful. Waiting for DB update."
+                                    "Server fetch successful. Waiting for DB update.",
                                 )
                                 initialFetchAttemptedOrSucceeded = true
                                 // If successful, the flow will emit again with new data.
@@ -98,10 +98,11 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
                                 Log.e(
                                     "PostListViewModel",
                                     "Failed to fetch posts from server",
-                                    fetchResult.exception
+                                    fetchResult.exception,
                                 )
                                 initialFetchAttemptedOrSucceeded = true
-                                _uiState.value = PostListUiState.Failed(fetchResult.exception)
+                                _uiState.value =
+                                    PostListUiState.Failed(error = fetchResult.exception)
                             }
                         }
                     } else if (forceServerRefresh) {
@@ -112,7 +113,7 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
                             is Result.Success -> {
                                 Log.d(
                                     "PostListViewModel",
-                                    "Server refresh successful. Waiting for DB update."
+                                    "Server refresh successful. Waiting for DB update.",
                                 )
                                 initialFetchAttemptedOrSucceeded = true
                             }
@@ -121,7 +122,7 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
                                 Log.e(
                                     "PostListViewModel",
                                     "Failed to refresh posts from server",
-                                    fetchResult.exception
+                                    fetchResult.exception,
                                 )
                                 initialFetchAttemptedOrSucceeded = true
                                 // Fallback to showing existing local data
@@ -146,7 +147,7 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
     fun markRead() = viewModelScope.launch {
         val ids = _selectedPostIds.value.toList()
         if (ids.isNotEmpty()) {
-            repository.markRead(ids)
+            repository.markRead(postIds = ids)
             clearSelection()
         }
     }
@@ -166,7 +167,7 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
     fun deletePosts() = viewModelScope.launch {
         val ids = _selectedPostIds.value.toList()
         if (ids.isNotEmpty()) {
-            repository.deletePosts(ids)
+            repository.deletePosts(postIds = ids)
             clearSelection()
         }
     }

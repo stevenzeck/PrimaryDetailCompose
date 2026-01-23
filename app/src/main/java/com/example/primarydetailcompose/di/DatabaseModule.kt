@@ -30,7 +30,11 @@ object DatabaseModule {
     @Singleton
     @Provides
     fun provideDatabase(@ApplicationContext appContext: Context): PostsDatabase {
-        return Room.databaseBuilder(appContext, PostsDatabase::class.java, DATABASE_NAME).build()
+        return Room.databaseBuilder(
+            context = appContext,
+            klass = PostsDatabase::class.java,
+            name = DATABASE_NAME,
+        ).build()
     }
 
     /**

@@ -2,6 +2,7 @@ package com.example.primarydetailcompose.di
 
 import com.example.primarydetailcompose.services.ApiService
 import com.example.primarydetailcompose.services.PostsDao
+import com.example.primarydetailcompose.ui.DefaultPostRepository
 import com.example.primarydetailcompose.ui.PostRepository
 import dagger.Module
 import dagger.Provides
@@ -30,6 +31,6 @@ object AppModule {
     @Singleton
     fun provideRepository(
         client: ApiService,
-        postsDao: PostsDao
-    ) = PostRepository(client, postsDao)
+        postsDao: PostsDao,
+    ): PostRepository = DefaultPostRepository(client = client, postsDao = postsDao)
 }
