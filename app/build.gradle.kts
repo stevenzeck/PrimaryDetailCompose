@@ -42,8 +42,8 @@ android {
 
     // Need to include this for lambda
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     buildFeatures {
@@ -60,10 +60,16 @@ android {
             excludes += "META-INF/LICENSE-notice.md"
         }
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 tasks.withType<Test> {
-    useJUnitPlatform()
+    jvmArgs("-noverify")
 }
 
 kotlin {
@@ -101,8 +107,10 @@ dependencies {
 
     // Unit Testing
     testImplementation(libs.bundles.test.unit)
-    testRuntimeOnly(libs.junit.jupiter.engine)
-    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.ext.junit)
+    testImplementation(libs.compose.ui.test.junit4)
+    kspTest(libs.hilt.compiler)
 
     // Instrumentation Testing
     androidTestImplementation(libs.bundles.test.android)

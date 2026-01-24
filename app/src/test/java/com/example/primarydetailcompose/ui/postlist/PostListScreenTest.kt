@@ -12,10 +12,13 @@ import androidx.compose.ui.test.performClick
 import com.example.primarydetailcompose.model.Post
 import io.mockk.every
 import io.mockk.mockk
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class PostListScreenTest {
 
     @get:Rule

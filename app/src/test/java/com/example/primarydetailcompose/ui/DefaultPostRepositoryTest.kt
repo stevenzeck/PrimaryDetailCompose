@@ -1,9 +1,9 @@
 package com.example.primarydetailcompose.ui
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.primarydetailcompose.model.Post
 import com.example.primarydetailcompose.services.ApiService
 import com.example.primarydetailcompose.services.PostsDao
-import com.example.primarydetailcompose.util.LogMockExtension
 import com.example.primarydetailcompose.util.Result
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -11,20 +11,20 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 
-@ExtendWith(LogMockExtension::class)
+@RunWith(AndroidJUnit4::class)
 class DefaultPostRepositoryTest {
 
     private lateinit var apiService: ApiService
     private lateinit var postsDao: PostsDao
     private lateinit var repository: DefaultPostRepository
 
-    @BeforeEach
+    @Before
     fun setup() {
         apiService = mockk(relaxed = true)
         postsDao = mockk(relaxed = true)

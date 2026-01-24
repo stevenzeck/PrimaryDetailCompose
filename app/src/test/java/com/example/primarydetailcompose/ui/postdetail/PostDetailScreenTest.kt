@@ -11,10 +11,13 @@ import androidx.compose.ui.test.performClick
 import com.example.primarydetailcompose.model.Post
 import io.mockk.every
 import io.mockk.mockk
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class PostDetailScreenTest {
 
     @get:Rule
@@ -30,15 +33,12 @@ class PostDetailScreenTest {
             ),
         )
 
-        val factory = mockk<PostDetailViewModel.Factory>()
-        every { factory.create(1L) } returns viewModel
-
         composeTestRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
                     PostDetailScreen(
                         postId = 1L,
-                        viewModelFactory = factory,
+                        viewModel = viewModel,
                         showBackButton = true,
                         onBack = {},
                         onDeleteConfirmed = {},
@@ -62,15 +62,13 @@ class PostDetailScreenTest {
                 post,
             ),
         )
-        val factory = mockk<PostDetailViewModel.Factory>()
-        every { factory.create(any()) } returns viewModel
 
         composeTestRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
                     PostDetailScreen(
                         postId = 1L,
-                        viewModelFactory = factory,
+                        viewModel = viewModel,
                         showBackButton = true,
                         onBack = {},
                         onDeleteConfirmed = {},
@@ -93,15 +91,13 @@ class PostDetailScreenTest {
                 post,
             ),
         )
-        val factory = mockk<PostDetailViewModel.Factory>()
-        every { factory.create(any()) } returns viewModel
 
         composeTestRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
                     PostDetailScreen(
                         postId = 1L,
-                        viewModelFactory = factory,
+                        viewModel = viewModel,
                         showBackButton = false,
                         onBack = {},
                         onDeleteConfirmed = {},
@@ -124,8 +120,6 @@ class PostDetailScreenTest {
                 post,
             ),
         )
-        val factory = mockk<PostDetailViewModel.Factory>()
-        every { factory.create(any()) } returns viewModel
 
         var deleteConfirmed = false
 
@@ -134,7 +128,7 @@ class PostDetailScreenTest {
                 AnimatedVisibility(visible = true) {
                     PostDetailScreen(
                         postId = 1L,
-                        viewModelFactory = factory,
+                        viewModel = viewModel,
                         showBackButton = true,
                         onBack = {},
                         onDeleteConfirmed = { deleteConfirmed = true },
