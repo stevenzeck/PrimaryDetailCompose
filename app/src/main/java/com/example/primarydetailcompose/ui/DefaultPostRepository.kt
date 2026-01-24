@@ -4,7 +4,6 @@ import android.util.Log
 import com.example.primarydetailcompose.model.Post
 import com.example.primarydetailcompose.services.ApiService
 import com.example.primarydetailcompose.services.PostsDao
-import com.example.primarydetailcompose.util.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -41,10 +40,10 @@ class DefaultPostRepository @Inject constructor(
         try {
             val postsFromServer = client.getAllPosts()
             insertPosts(postsFromServer)
-            Result.Success(data = Unit)
+            Result.success(value = Unit)
         } catch (e: Exception) {
             Log.e("DefaultPostRepository", "Error fetching or inserting server posts", e)
-            Result.Error(exception = e)
+            Result.failure(exception = e)
         }
     }
 

@@ -4,7 +4,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.primarydetailcompose.model.Post
 import com.example.primarydetailcompose.services.ApiService
 import com.example.primarydetailcompose.services.PostsDao
-import com.example.primarydetailcompose.util.Result
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -49,7 +48,7 @@ class DefaultPostRepositoryTest {
 
         val result = repository.getServerPosts()
 
-        assertTrue(result is Result.Success)
+        assertTrue(result.isSuccess)
         coVerify { apiService.getAllPosts() }
         coVerify { postsDao.insertPosts(posts) }
     }
@@ -61,8 +60,8 @@ class DefaultPostRepositoryTest {
 
         val result = repository.getServerPosts()
 
-        assertTrue(result is Result.Error)
-        assertEquals(exception, (result as Result.Error).exception)
+        assertTrue(result.isFailure)
+        assertEquals(exception, result.exceptionOrNull())
         coVerify(exactly = 0) { postsDao.insertPosts(posts = any()) }
     }
 

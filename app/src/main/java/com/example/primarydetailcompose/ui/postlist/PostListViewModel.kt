@@ -3,8 +3,8 @@ package com.example.primarydetailcompose.ui.postlist
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.primarydetailcompose.model.Post
 import com.example.primarydetailcompose.ui.PostRepository
-import com.example.primarydetailcompose.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,12 +61,10 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
                 _uiState.value = PostListUiState.Loading
             }
 
-            repository.getPosts()
-                .catch { e ->
+            repository.getPosts().catch { e ->
                     Log.e("PostListViewModel", "Error in posts data flow from repository", e)
                     _uiState.value = PostListUiState.Failed(error = e as Exception)
-                }
-                .collect { posts ->
+                }.collect { posts ->
                     val currentlyEmpty = posts.isEmpty()
 
                     // Check if we need to fetch from network:
@@ -77,59 +75,11 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
                             "PostListViewModel",
                             "Local database is empty or refresh forced. Fetching from server...",
                         )
-                        _uiState.value = PostListUiState.Loading
-
-                        when (val fetchResult =
-                            repository.getServerPosts()) { // Assumes PostRepository is updated
-                            is Result.Success -> {
-                                Log.d(
-                                    "PostListViewModel",
-                                    "Server fetch successful. Waiting for DB update.",
-                                )
-                                initialFetchAttemptedOrSucceeded = true
-                                // If successful, the flow will emit again with new data.
-                                // We update state only if it's currently not failed.
-                                if (_uiState.value !is PostListUiState.Failed) {
-                                    _uiState.value = PostListUiState.Success(posts)
-                                }
-                            }
-
-                            is Result.Error -> {
-                                Log.e(
-                                    "PostListViewModel",
-                                    "Failed to fetch posts from server",
-                                    fetchResult.exception,
-                                )
-                                initialFetchAttemptedOrSucceeded = true
-                                _uiState.value =
-                                    PostListUiState.Failed(error = fetchResult.exception)
-                            }
-                        }
+                        performServerFetch(posts)
                     } else if (forceServerRefresh) {
                         // DB has data, but user forced a refresh
                         Log.d("PostListViewModel", "DB not empty, but forcing server refresh...")
-                        _uiState.value = PostListUiState.Loading
-                        when (val fetchResult = repository.getServerPosts()) {
-                            is Result.Success -> {
-                                Log.d(
-                                    "PostListViewModel",
-                                    "Server refresh successful. Waiting for DB update.",
-                                )
-                                initialFetchAttemptedOrSucceeded = true
-                            }
-
-                            is Result.Error -> {
-                                Log.e(
-                                    "PostListViewModel",
-                                    "Failed to refresh posts from server",
-                                    fetchResult.exception,
-                                )
-                                initialFetchAttemptedOrSucceeded = true
-                                // Fallback to showing existing local data
-                                _uiState.value = PostListUiState.Success(posts)
-                                // TODO: Consider a way to show a non-critical error message to the user (e.g., Snackbar)
-                            }
-                        }
+                        performServerRefresh(posts)
                     } else {
                         // Normal case: emit success with data from DB
                         _uiState.value = PostListUiState.Success(posts)
@@ -139,6 +89,59 @@ class PostListViewModel @Inject constructor(private val repository: PostReposito
                     }
                 }
         }
+    }
+
+    /**
+     * Helper function to handle the native Result for an initial/empty fetch.
+     */
+    private suspend fun performServerFetch(posts: List<Post>) {
+        _uiState.value = PostListUiState.Loading
+
+        repository.getServerPosts().onSuccess {
+                Log.d(
+                    "PostListViewModel",
+                    "Server fetch successful. Waiting for DB update.",
+                )
+                initialFetchAttemptedOrSucceeded = true
+                // If successful, the flow will emit again with new data.
+                // We update state only if it's currently not failed.
+                if (_uiState.value !is PostListUiState.Failed) {
+                    _uiState.value = PostListUiState.Success(posts)
+                }
+            }.onFailure { exception ->
+                Log.e(
+                    "PostListViewModel",
+                    "Failed to fetch posts from server",
+                    exception,
+                )
+                initialFetchAttemptedOrSucceeded = true
+                _uiState.value = PostListUiState.Failed(error = exception as Exception)
+            }
+    }
+
+    /**
+     * Helper function to handle the native Result for a forced refresh.
+     */
+    private suspend fun performServerRefresh(posts: List<Post>) {
+        _uiState.value = PostListUiState.Loading
+
+        repository.getServerPosts().onSuccess {
+                Log.d(
+                    "PostListViewModel",
+                    "Server refresh successful. Waiting for DB update.",
+                )
+                initialFetchAttemptedOrSucceeded = true
+            }.onFailure { exception ->
+                Log.e(
+                    "PostListViewModel",
+                    "Failed to refresh posts from server",
+                    exception,
+                )
+                initialFetchAttemptedOrSucceeded = true
+                // Fallback to showing existing local data
+                _uiState.value = PostListUiState.Success(posts)
+                // TODO: Consider a way to show a non-critical error message to the user (e.g., Snackbar)
+            }
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.example.primarydetailcompose.ui
 
 import com.example.primarydetailcompose.model.Post
-import com.example.primarydetailcompose.util.Result
 import kotlinx.coroutines.flow.Flow
 
 /**
