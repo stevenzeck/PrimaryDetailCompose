@@ -113,4 +113,22 @@ class PostListItemTest {
 
         composeTestRule.onNodeWithText(text = "Test Post").assertExists()
     }
+
+    @Test
+    fun rendersReadState() {
+        // verifying it renders without crashing
+        val post = Post(id = 1, userId = 1, title = "Test Post", body = "Body", read = true)
+
+        composeTestRule.setContent {
+            PostListItem(
+                post = post,
+                selected = false,
+                onPostSelected = {},
+                onPostLongPressed = {},
+                modifier = Modifier,
+            )
+        }
+
+        composeTestRule.onNodeWithText(text = "Test Post").assertExists()
+    }
 }
