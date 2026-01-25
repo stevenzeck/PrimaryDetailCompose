@@ -44,10 +44,12 @@ import com.example.primarydetailcompose.R
 import com.example.primarydetailcompose.model.Post
 
 /**
- * The main screen that displays a list of posts.
+ * The main entry point for the Post List screen.
  *
- * Handles loading, error, and success states. Supports multi-selection for deleting or marking posts as read.
+ * This is the stateful version that connects to Hilt and provides the ViewModel.
  *
+ * @param sharedTransitionScope The scope for shared element transitions.
+ * @param animatedVisibilityScope The scope for animated visibility.
  * @param onPostSelected Callback triggered when a post is clicked for navigation. Passes the post ID.
  * @param viewModel The [PostListViewModel] that manages the state of this screen.
  */
@@ -60,16 +62,60 @@ fun PostListScreen(
     onPostSelected: (Long) -> Unit,
     viewModel: PostListViewModel = hiltViewModel(),
 ) {
-    val listState = rememberLazyListState()
     val uiState by viewModel.postListUiState.collectAsStateWithLifecycle()
     val selectedPostIds by viewModel.selectedPostIds.collectAsStateWithLifecycle()
-    var showDeleteDialog by remember { mutableStateOf(false) }
 
+    PostListScreenContent(
+        uiState = uiState,
+        selectedPostIds = selectedPostIds,
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = animatedVisibilityScope,
+        onPostClick = { postId ->
+            if (selectedPostIds.isNotEmpty()) {
+                viewModel.toggleSelection(postId)
+            } else {
+                viewModel.markRead(postId)
+                onPostSelected(postId)
+            }
+        },
+        onPostLongClick = { postId ->
+            viewModel.toggleSelection(postId)
+        },
+        onClearSelection = { viewModel.clearSelection() },
+        onMarkReadSelected = { viewModel.markRead() },
+        onDeleteSelected = { viewModel.deletePosts() },
+        onRetry = { viewModel.loadPosts(forceServerRefresh = true) },
+    )
+}
+
+/**
+ * A stateless version of the Post List screen.
+ *
+ * This version is easier to test and preview as it doesn't depend on a ViewModel.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@ExperimentalFoundationApi
+@Composable
+internal fun PostListScreenContent(
+    uiState: PostListUiState,
+    selectedPostIds: Set<Long>,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    onPostClick: (Long) -> Unit,
+    onPostLongClick: (Long) -> Unit,
+    onClearSelection: () -> Unit,
+    onMarkReadSelected: () -> Unit,
+    onDeleteSelected: () -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val listState = rememberLazyListState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
     val isSelectionMode = selectedPostIds.isNotEmpty()
 
     // Handle system back button to clear selection if in selection mode
     BackHandler(enabled = isSelectionMode) {
-        viewModel.clearSelection()
+        onClearSelection()
     }
 
     if (showDeleteDialog) {
@@ -80,7 +126,7 @@ fun PostListScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.deletePosts()
+                        onDeleteSelected()
                         showDeleteDialog = false
                     },
                 ) {
@@ -96,6 +142,7 @@ fun PostListScreen(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = {
@@ -113,7 +160,7 @@ fun PostListScreen(
                 },
                 navigationIcon = {
                     if (isSelectionMode) {
-                        IconButton(onClick = { viewModel.clearSelection() }) {
+                        IconButton(onClick = onClearSelection) {
                             Icon(
                                 painter = painterResource(id = R.drawable.close),
                                 contentDescription = stringResource(id = R.string.clear_selected),
@@ -124,7 +171,7 @@ fun PostListScreen(
                 },
                 actions = {
                     if (isSelectionMode) {
-                        IconButton(onClick = { viewModel.markRead() }) {
+                        IconButton(onClick = onMarkReadSelected) {
                             Icon(
                                 painter = painterResource(id = R.drawable.check),
                                 contentDescription = stringResource(id = R.string.markRead),
@@ -143,48 +190,40 @@ fun PostListScreen(
             )
         },
     ) { padding ->
-        val modifier = Modifier.padding(paddingValues = padding)
+        val contentModifier = Modifier.padding(paddingValues = padding)
 
-        when (val currentState = uiState) {
+        when (uiState) {
             is PostListUiState.Success -> {
-                if (currentState.posts.isEmpty()) {
+                if (uiState.posts.isEmpty()) {
                     EmptyContentView(
-                        message = stringResource(R.string.no_posts_available), modifier = modifier,
+                        message = stringResource(R.string.no_posts_available),
+                        modifier = contentModifier,
                     )
                 } else {
                     PostList(
                         listState = listState,
-                        posts = currentState.posts,
+                        posts = uiState.posts,
                         selectedPostIds = selectedPostIds,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
-                        onPostSelected = { postId ->
-                            if (isSelectionMode) {
-                                viewModel.toggleSelection(postId)
-                            } else {
-                                viewModel.markRead(postId)
-                                onPostSelected(postId)
-                            }
-                        },
-                        onPostLongPressed = { postId ->
-                            viewModel.toggleSelection(postId)
-                        },
-                        modifier = modifier,
+                        onPostSelected = onPostClick,
+                        onPostLongPressed = onPostLongClick,
+                        modifier = contentModifier,
                     )
                 }
             }
 
             is PostListUiState.Failed -> {
                 ErrorStateView(
-                    errorMessage = currentState.error.localizedMessage
+                    errorMessage = uiState.error.localizedMessage
                         ?: stringResource(R.string.error_prefix_text),
-                    onRetry = { viewModel.loadPosts(forceServerRefresh = true) },
-                    modifier = modifier,
+                    onRetry = onRetry,
+                    modifier = contentModifier,
                 )
             }
 
             is PostListUiState.Loading -> {
-                LoadingView() // LoadingView is usually full screen, but we can respect scaffold padding if we want
+                LoadingView()
             }
         }
     }
