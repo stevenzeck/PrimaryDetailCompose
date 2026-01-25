@@ -29,7 +29,7 @@ interface PostsDao {
      * @return The total number of posts.
      */
     @Query("SELECT COUNT(*) FROM ${Post.TABLE_NAME}")
-    fun getPostsCount(): Int
+    suspend fun getPostsCount(): Int
 
     /**
      * Retrieve a specific post from the database by its ID.

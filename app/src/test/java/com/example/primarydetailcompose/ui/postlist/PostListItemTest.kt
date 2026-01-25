@@ -3,10 +3,10 @@ package com.example.primarydetailcompose.ui.postlist
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.longClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.primarydetailcompose.model.Post
 import org.junit.Assert.assertEquals
@@ -31,7 +31,7 @@ class PostListItemTest {
                 selected = false,
                 onPostSelected = {},
                 onPostLongPressed = {},
-                modifier = Modifier
+                modifier = Modifier,
             )
         }
 
@@ -49,7 +49,7 @@ class PostListItemTest {
                 selected = false,
                 onPostSelected = { clickedId = it },
                 onPostLongPressed = {},
-                modifier = Modifier
+                modifier = Modifier,
             )
         }
 
@@ -68,7 +68,7 @@ class PostListItemTest {
                 selected = false,
                 onPostSelected = {},
                 onPostLongPressed = { longPressedId = it },
-                modifier = Modifier
+                modifier = Modifier,
             )
         }
 
@@ -89,7 +89,7 @@ class PostListItemTest {
                 selected = true,
                 onPostSelected = {},
                 onPostLongPressed = {},
-                modifier = Modifier
+                modifier = Modifier,
             )
         }
 
@@ -107,7 +107,7 @@ class PostListItemTest {
                 selected = false,
                 onPostSelected = {},
                 onPostLongPressed = {},
-                modifier = Modifier
+                modifier = Modifier,
             )
         }
 

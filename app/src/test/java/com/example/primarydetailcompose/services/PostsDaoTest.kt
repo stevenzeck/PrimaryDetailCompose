@@ -25,7 +25,9 @@ class PostsDaoTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = Room.inMemoryDatabaseBuilder(
             context = context, klass = PostsDatabase::class.java,
-        ).build()
+        )
+            .allowMainThreadQueries() // Allow queries on main thread for tests
+            .build()
         postsDao = db.postsDao()
     }
 
@@ -56,6 +58,21 @@ class PostsDaoTest {
     }
 
     @Test
+    fun deletePosts() = runBlocking {
+        val posts = listOf(
+            Post(id = 1, userId = 1, title = "T1", body = "B1"),
+            Post(id = 2, userId = 1, title = "T2", body = "B2"),
+            Post(id = 3, userId = 1, title = "T3", body = "B3"),
+        )
+        postsDao.insertPosts(posts)
+
+        postsDao.deletePosts(listOf(1L, 2L))
+        val remainingPosts = postsDao.getAllPosts().first()
+        assertEquals(1, remainingPosts.size)
+        assertEquals(3L, remainingPosts[0].id)
+    }
+
+    @Test
     fun markRead() = runBlocking {
         val post = Post(id = 1, userId = 1, title = "Title", body = "Body", read = false)
         postsDao.insertPosts(posts = listOf(post))
@@ -64,5 +81,31 @@ class PostsDaoTest {
 
         val loaded = postsDao.postById(postId = 1).first()
         assertTrue(loaded.read)
+    }
+
+    @Test
+    fun markReadMultiple() = runBlocking {
+        val posts = listOf(
+            Post(id = 1, userId = 1, title = "T1", body = "B1", read = false),
+            Post(id = 2, userId = 1, title = "T2", body = "B2", read = false),
+        )
+        postsDao.insertPosts(posts)
+
+        postsDao.markRead(listOf(1L, 2L))
+
+        val loaded = postsDao.getAllPosts().first()
+        assertTrue(loaded.all { it.read })
+    }
+
+    @Test
+    fun getPostsCount() = runBlocking {
+        val posts = listOf(
+            Post(id = 1, userId = 1, title = "T1", body = "B1"),
+            Post(id = 2, userId = 1, title = "T2", body = "B2"),
+        )
+        postsDao.insertPosts(posts)
+
+        val count = postsDao.getPostsCount()
+        assertEquals(2, count)
     }
 }

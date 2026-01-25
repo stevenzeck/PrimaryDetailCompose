@@ -9,7 +9,7 @@
     <string name="back">Back</string>
     <string name="clear_selected">Clear selected items</string>
     <string name="retry_button_text">Retry</string>
-    <string name="error_prefix_text">Error</string>
+    <string name="error_prefix_text">Error: %1$s</string>
     <string name="no_posts_available">No posts to show</string>
 
     <string name="theme_title">Theme</string>

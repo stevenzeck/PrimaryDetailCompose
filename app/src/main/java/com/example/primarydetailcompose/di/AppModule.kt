@@ -1,11 +1,9 @@
 package com.example.primarydetailcompose.di
 
-import com.example.primarydetailcompose.services.ApiService
-import com.example.primarydetailcompose.services.PostsDao
 import com.example.primarydetailcompose.ui.DefaultPostRepository
 import com.example.primarydetailcompose.ui.PostRepository
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -18,19 +16,15 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
-object AppModule {
+abstract class AppModule {
 
     /**
-     * Provides a singleton instance of [PostRepository].
+     * Binds the [DefaultPostRepository] implementation to the [PostRepository] interface.
      *
-     * @param client The [ApiService] for network operations.
-     * @param postsDao The [PostsDao] for local database operations.
-     * @return A new instance of [PostRepository].
+     * @param impl The implementation of the repository.
+     * @return The repository interface.
      */
-    @Provides
+    @Binds
     @Singleton
-    fun provideRepository(
-        client: ApiService,
-        postsDao: PostsDao,
-    ): PostRepository = DefaultPostRepository(client = client, postsDao = postsDao)
+    abstract fun bindRepository(impl: DefaultPostRepository): PostRepository
 }

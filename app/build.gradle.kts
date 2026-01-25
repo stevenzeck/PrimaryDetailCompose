@@ -81,6 +81,7 @@ kotlin {
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
             "-opt-in=androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
+            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
         )
     }
 }
@@ -110,6 +111,7 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.ext.junit)
     testImplementation(libs.compose.ui.test.junit4)
+    testImplementation(libs.androidx.expresso.core)
     kspTest(libs.hilt.compiler)
 
     // Instrumentation Testing

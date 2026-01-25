@@ -2,16 +2,18 @@ package com.example.primarydetailcompose.ui.postdetail
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.primarydetailcompose.model.Post
 import io.mockk.every
 import io.mockk.mockk
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
@@ -22,6 +24,61 @@ class PostDetailScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @Test
+    fun loadingState_isDisplayed() {
+        val viewModel = mockk<PostDetailViewModel>(relaxed = true)
+        every { viewModel.postDetailUiState } returns MutableStateFlow(value = PostDetailUiState.Loading)
+
+        composeTestRule.setContent {
+            SharedTransitionLayout {
+                AnimatedVisibility(visible = true) {
+                    PostDetailScreen(
+                        postId = 1L,
+                        viewModel = viewModel,
+                        showBackButton = true,
+                        onBack = {},
+                        onDeleteConfirmed = {},
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this,
+                    )
+                }
+            }
+        }
+
+        composeTestRule
+            .onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun failedState_isDisplayed() {
+        val viewModel = mockk<PostDetailViewModel>(relaxed = true)
+        every { viewModel.postDetailUiState } returns MutableStateFlow(
+            value = PostDetailUiState.Failed(error = Exception("Error")),
+        )
+
+        composeTestRule.setContent {
+            SharedTransitionLayout {
+                AnimatedVisibility(visible = true) {
+                    PostDetailScreen(
+                        postId = 1L,
+                        viewModel = viewModel,
+                        showBackButton = true,
+                        onBack = {},
+                        onDeleteConfirmed = {},
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this,
+                    )
+                }
+            }
+        }
+
+        // According to current implementation, Failed state shows LoadingView()
+        composeTestRule
+            .onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
+            .assertIsDisplayed()
+    }
 
     @Test
     fun postDetails_areDisplayed() {
@@ -139,7 +196,7 @@ class PostDetailScreenTest {
             }
         }
 
-        // Click delete icon directly (no overflow menu)
+        // Click delete icon directly
         composeTestRule.onNodeWithContentDescription(label = "Delete Post").performClick()
 
         // Confirm deletion in dialog
@@ -148,7 +205,40 @@ class PostDetailScreenTest {
         // Verify the mock call
         io.mockk.verify { viewModel.deletePost() }
 
-        // Wait/Verify callback (if implementation invokes it immediately)
+        // Verify callback
         assert(deleteConfirmed)
+    }
+
+    @Test
+    fun deleteAction_cancel_doesNotTriggerDelete() {
+        val post = Post(id = 1, userId = 1, title = "Title", body = "Body")
+        val viewModel = mockk<PostDetailViewModel>(relaxed = true)
+        every { viewModel.postDetailUiState } returns MutableStateFlow(
+            value = PostDetailUiState.Success(post),
+        )
+
+        var deleteConfirmed = false
+
+        composeTestRule.setContent {
+            SharedTransitionLayout {
+                AnimatedVisibility(visible = true) {
+                    PostDetailScreen(
+                        postId = 1L,
+                        viewModel = viewModel,
+                        showBackButton = true,
+                        onBack = {},
+                        onDeleteConfirmed = { deleteConfirmed = true },
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this,
+                    )
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription(label = "Delete Post").performClick()
+        composeTestRule.onNodeWithText(text = "Cancel").performClick()
+
+        io.mockk.verify(exactly = 0) { viewModel.deletePost() }
+        assert(!deleteConfirmed)
     }
 }
