@@ -110,7 +110,7 @@ internal fun PostListScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(value = false) }
     val isSelectionMode = selectedPostIds.isNotEmpty()
 
     // Handle system back button to clear selection if in selection mode
@@ -196,7 +196,7 @@ internal fun PostListScreenContent(
             is PostListUiState.Success -> {
                 if (uiState.posts.isEmpty()) {
                     EmptyContentView(
-                        message = stringResource(R.string.no_posts_available),
+                        message = stringResource(id = R.string.no_posts_available),
                         modifier = contentModifier,
                     )
                 } else {
@@ -216,7 +216,7 @@ internal fun PostListScreenContent(
             is PostListUiState.Failed -> {
                 ErrorStateView(
                     errorMessage = uiState.error.localizedMessage
-                        ?: stringResource(R.string.error_prefix_text),
+                        ?: stringResource(id = R.string.error_prefix_text),
                     onRetry = onRetry,
                     modifier = contentModifier,
                 )
@@ -260,7 +260,7 @@ fun PostList(
                 post.id
             },
         ) { post ->
-            with(sharedTransitionScope) {
+            with(receiver = sharedTransitionScope) {
                 PostListItem(
                     post = post,
                     selected = selectedPostIds.contains(post.id),

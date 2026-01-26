@@ -124,7 +124,8 @@ class ThemeTest {
         composeTestRule.setContent {
             PrimaryDetailTheme(useDarkTheme = dark) {
                 val currentPrimary = MaterialTheme.colorScheme.primary
-                val expectedPrimary = if (dark) darkColorScheme().primary else lightColorScheme().primary
+                val expectedPrimary =
+                    if (dark) darkColorScheme().primary else lightColorScheme().primary
                 assertEquals("Color mismatch", expectedPrimary, currentPrimary)
             }
         }
@@ -146,7 +147,7 @@ class ThemeTest {
         trigger++
         composeTestRule.waitForIdle()
     }
-    
+
     @Test
     @Config(sdk = [Build.VERSION_CODES.R])
     fun theme_callWithNamedArguments() {
@@ -154,7 +155,7 @@ class ThemeTest {
             // Exercise the named argument call path
             PrimaryDetailTheme(
                 useDarkTheme = false,
-                content = { }
+                content = { },
             )
         }
     }

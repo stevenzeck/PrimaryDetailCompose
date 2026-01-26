@@ -5,7 +5,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasProgressBarRangeInfo
@@ -130,9 +129,15 @@ class PostListScreenTest {
     fun stateful_clickingPost_marksReadAndNavigates() {
         val post = Post(id = 1, userId = 1, title = "Post 1", body = "Body")
         val viewModel = mockk<PostListViewModel>(relaxed = true)
-        every { viewModel.postListUiState } returns MutableStateFlow(PostListUiState.Success(listOf(post)))
+        every { viewModel.postListUiState } returns MutableStateFlow(
+            PostListUiState.Success(
+                listOf(
+                    post,
+                ),
+            ),
+        )
         every { viewModel.selectedPostIds } returns MutableStateFlow(emptySet())
-        
+
         var navigatedId: Long? = null
 
         composeTestRule.setContent {
@@ -142,7 +147,7 @@ class PostListScreenTest {
                         viewModel = viewModel,
                         onPostSelected = { navigatedId = it },
                         sharedTransitionScope = this@SharedTransitionLayout,
-                        animatedVisibilityScope = this
+                        animatedVisibilityScope = this,
                     )
                 }
             }
@@ -159,7 +164,13 @@ class PostListScreenTest {
     fun stateful_longClick_togglesSelection() {
         val post = Post(id = 1, userId = 1, title = "Post 1", body = "Body")
         val viewModel = mockk<PostListViewModel>(relaxed = true)
-        every { viewModel.postListUiState } returns MutableStateFlow(PostListUiState.Success(listOf(post)))
+        every { viewModel.postListUiState } returns MutableStateFlow(
+            PostListUiState.Success(
+                listOf(
+                    post,
+                ),
+            ),
+        )
         every { viewModel.selectedPostIds } returns MutableStateFlow(emptySet())
 
         composeTestRule.setContent {
@@ -169,7 +180,7 @@ class PostListScreenTest {
                         viewModel = viewModel,
                         onPostSelected = {},
                         sharedTransitionScope = this@SharedTransitionLayout,
-                        animatedVisibilityScope = this
+                        animatedVisibilityScope = this,
                     )
                 }
             }
@@ -184,7 +195,13 @@ class PostListScreenTest {
     fun stateful_selectionMode_click_togglesSelection() {
         val post = Post(id = 1, userId = 1, title = "Post 1", body = "Body")
         val viewModel = mockk<PostListViewModel>(relaxed = true)
-        every { viewModel.postListUiState } returns MutableStateFlow(PostListUiState.Success(listOf(post)))
+        every { viewModel.postListUiState } returns MutableStateFlow(
+            PostListUiState.Success(
+                listOf(
+                    post,
+                ),
+            ),
+        )
         every { viewModel.selectedPostIds } returns MutableStateFlow(setOf(1L))
 
         composeTestRule.setContent {
@@ -194,7 +211,7 @@ class PostListScreenTest {
                         viewModel = viewModel,
                         onPostSelected = {},
                         sharedTransitionScope = this@SharedTransitionLayout,
-                        animatedVisibilityScope = this
+                        animatedVisibilityScope = this,
                     )
                 }
             }
@@ -208,7 +225,11 @@ class PostListScreenTest {
     @Test
     fun stateful_actions_callViewModel() {
         val viewModel = mockk<PostListViewModel>(relaxed = true)
-        every { viewModel.postListUiState } returns MutableStateFlow(PostListUiState.Success(emptyList()))
+        every { viewModel.postListUiState } returns MutableStateFlow(
+            PostListUiState.Success(
+                emptyList(),
+            ),
+        )
         every { viewModel.selectedPostIds } returns MutableStateFlow(setOf(1L))
 
         composeTestRule.setContent {
@@ -218,7 +239,7 @@ class PostListScreenTest {
                         viewModel = viewModel,
                         onPostSelected = {},
                         sharedTransitionScope = this@SharedTransitionLayout,
-                        animatedVisibilityScope = this
+                        animatedVisibilityScope = this,
                     )
                 }
             }
@@ -229,7 +250,7 @@ class PostListScreenTest {
 
         composeTestRule.onNodeWithContentDescription("Mark Read").performClick()
         verify { viewModel.markRead() }
-        
+
         composeTestRule.onNodeWithContentDescription("Delete").performClick()
         composeTestRule.onNodeWithText("Delete").performClick()
         verify { viewModel.deletePosts() }
@@ -239,7 +260,11 @@ class PostListScreenTest {
     @Test
     fun stateful_backPress_clearsSelection() {
         val viewModel = mockk<PostListViewModel>(relaxed = true)
-        every { viewModel.postListUiState } returns MutableStateFlow(PostListUiState.Success(emptyList()))
+        every { viewModel.postListUiState } returns MutableStateFlow(
+            PostListUiState.Success(
+                emptyList(),
+            ),
+        )
         every { viewModel.selectedPostIds } returns MutableStateFlow(setOf(1L))
 
         composeTestRule.setContent {
@@ -249,7 +274,7 @@ class PostListScreenTest {
                         viewModel = viewModel,
                         onPostSelected = {},
                         sharedTransitionScope = this@SharedTransitionLayout,
-                        animatedVisibilityScope = this
+                        animatedVisibilityScope = this,
                     )
                 }
             }
@@ -266,7 +291,11 @@ class PostListScreenTest {
     @Test
     fun stateful_retry_callsViewModel() {
         val viewModel = mockk<PostListViewModel>(relaxed = true)
-        every { viewModel.postListUiState } returns MutableStateFlow(PostListUiState.Failed(Exception("Error")))
+        every { viewModel.postListUiState } returns MutableStateFlow(
+            PostListUiState.Failed(
+                Exception("Error"),
+            ),
+        )
         every { viewModel.selectedPostIds } returns MutableStateFlow(emptySet())
 
         composeTestRule.setContent {
@@ -276,7 +305,7 @@ class PostListScreenTest {
                         viewModel = viewModel,
                         onPostSelected = {},
                         sharedTransitionScope = this@SharedTransitionLayout,
-                        animatedVisibilityScope = this
+                        animatedVisibilityScope = this,
                     )
                 }
             }
@@ -295,7 +324,7 @@ class PostListScreenTest {
         val viewModelStoreOwner = object : ViewModelStoreOwner {
             override val viewModelStore: ViewModelStore = viewModelStore
         }
-        
+
         try {
             composeTestRule.setContent {
                 CompositionLocalProvider(LocalViewModelStoreOwner provides viewModelStoreOwner) {
@@ -310,7 +339,7 @@ class PostListScreenTest {
                     }
                 }
             }
-        } catch (e: Exception) { 
+        } catch (e: Exception) {
             // Expected failure in unit test environment
         }
     }
