@@ -37,9 +37,9 @@ class PostDetailViewModel @AssistedInject constructor(
      * It maps the database stream to a [PostDetailUiState], handling errors and loading states.
      */
     val postDetailUiState: StateFlow<PostDetailUiState> =
-        repository.postById(postId)
+        repository.postById(postId = postId)
             .map<Post, PostDetailUiState> { post ->
-                PostDetailUiState.Success(post)
+                PostDetailUiState.Success(post = post)
             }
             .catch { e ->
                 Log.e("PostDetailViewModel", "Error fetching post details for ID $postId", e)

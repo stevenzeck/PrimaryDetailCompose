@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
                 val density = LocalDensity.current
                 val windowInfo = LocalWindowInfo.current
                 // Determine if the layout is expanded (e.g. tablet) based on width
-                val isExpanded = with(density) {
+                val isExpanded = with(receiver = density) {
                     windowInfo.containerSize.width >= 840.dp.roundToPx()
                 }
 
