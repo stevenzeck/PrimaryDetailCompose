@@ -1,10 +1,11 @@
 plugins {
     alias(libs.plugins.agp)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kover)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
-    alias(libs.plugins.compose.compiler)
 }
 
 android {
