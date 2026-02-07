@@ -120,3 +120,30 @@ dependencies {
     debugImplementation(libs.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
+
+kover {
+    reports {
+        filters {
+            excludes {
+                annotatedBy(
+                    "dagger.internal.DaggerGenerated",
+                    "dagger.hilt.codegen.OriginatingElement",
+                    "javax.annotation.processing.Generated",
+                )
+                classes(
+                    "**.BuildConfig",
+                    "*ComposableSingletons*",
+                    "dagger.hilt.internal.aggregatedroot.codegen.**",
+                    "**.Dagger*",
+                    "**.*_Factory*",
+                    "**.Hilt_*",
+                    "**.*_HiltModules*",
+                    "hilt_aggregated_deps.**",
+                    "**.*_Impl*",
+                    "**.*_MembersInjector*",
+                    "**.*_Provide*Factory*",
+                )
+            }
+        }
+    }
+}
