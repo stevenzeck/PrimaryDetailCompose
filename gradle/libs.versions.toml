@@ -37,7 +37,7 @@ ext-junit = "1.3.0"
 expresso-core = "3.7.0"
 mockk = "1.14.9"
 robolectric = "4.16.1"
-kover = "0.9.5"
+kover = "0.9.7"
 
 [libraries]
 # --- Compose ---
