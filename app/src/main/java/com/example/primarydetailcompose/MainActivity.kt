@@ -119,7 +119,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         backStack = backStack,
                         onBack = { backStack.removeLastOrNull() },
-                        sceneStrategy = listDetailStrategy,
+                        sceneStrategies = listOf(listDetailStrategy),
                         entryProvider = entryProvider {
                             entry<PostList>(
                                 metadata = ListDetailSceneStrategy.listPane(
