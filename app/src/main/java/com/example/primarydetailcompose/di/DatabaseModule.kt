@@ -1,7 +1,7 @@
 package com.example.primarydetailcompose.di
 
 import android.content.Context
-import androidx.room.Room
+import androidx.room3.Room
 import com.example.primarydetailcompose.services.PostsDao
 import com.example.primarydetailcompose.services.PostsDatabase
 import com.example.primarydetailcompose.util.DATABASE_NAME
@@ -30,9 +30,8 @@ object DatabaseModule {
     @Singleton
     @Provides
     fun provideDatabase(@ApplicationContext appContext: Context): PostsDatabase {
-        return Room.databaseBuilder(
+        return Room.databaseBuilder<PostsDatabase>(
             context = appContext,
-            klass = PostsDatabase::class.java,
             name = DATABASE_NAME,
         ).build()
     }

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kover)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room3)
 }
 
 android {
@@ -87,6 +88,10 @@ kotlin {
     }
 }
 
+room3 {
+    schemaDirectory("$projectDir/schemas")
+}
+
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(libs.kotlin.stdlib)
@@ -96,7 +101,9 @@ dependencies {
     implementation(libs.bundles.hilt)
     implementation(libs.bundles.navigation3)
     implementation(libs.bundles.retrofit)
-    implementation(libs.bundles.room)
+
+    // Room
+    implementation(libs.androidx.room3)
 
     // Individual Architecture/UI Libs
     implementation(libs.androidx.lifecycle.viewmodel)
@@ -104,7 +111,7 @@ dependencies {
     runtimeOnly(libs.coroutines.android)
 
     // Annotation Processors
-    ksp(libs.androidx.room.compiler)
+    ksp(libs.androidx.room3.compiler)
     ksp(libs.hilt.compiler)
 
     // Unit Testing

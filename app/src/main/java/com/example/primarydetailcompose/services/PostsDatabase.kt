@@ -1,7 +1,7 @@
 package com.example.primarydetailcompose.services
 
-import androidx.room.Database
-import androidx.room.RoomDatabase
+import androidx.room3.Database
+import androidx.room3.RoomDatabase
 import com.example.primarydetailcompose.model.Post
 
 /**
@@ -9,7 +9,8 @@ import com.example.primarydetailcompose.model.Post
  *
  * Defines the database configuration and serves as the main access point to the persisted data.
  */
-@Database(entities = [Post::class], version = 1, exportSchema = false)
+@Database(entities = [Post::class], version = 1, exportSchema = true)
+//TODO See if the RoomDatabase "error" goes away in future releases
 abstract class PostsDatabase : RoomDatabase() {
 
     /**
@@ -18,5 +19,4 @@ abstract class PostsDatabase : RoomDatabase() {
      * @return The [PostsDao] implementation.
      */
     abstract fun postsDao(): PostsDao
-
 }
