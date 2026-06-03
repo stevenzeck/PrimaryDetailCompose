@@ -77,7 +77,7 @@ tasks.withType<Test> {
 
 kotlin {
     compilerOptions {
-        languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
+        languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_4
         allWarningsAsErrors = true
 
         freeCompilerArgs.addAll(
@@ -85,6 +85,7 @@ kotlin {
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
             "-opt-in=androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
             "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+            "-XXLanguage:+ExplicitBackingFields",
         )
     }
 }
@@ -96,6 +97,7 @@ room3 {
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(libs.kotlin.stdlib)
+    annotationProcessor(libs.kotlin.metadata.jvm)
 
     // Feature Bundles
     implementation(libs.bundles.compose)
