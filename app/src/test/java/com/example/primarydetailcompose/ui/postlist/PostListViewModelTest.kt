@@ -117,7 +117,7 @@ class PostListViewModelTest {
         viewModel.loadPosts(forceServerRefresh = true)
 
         coVerify { repository.getServerPosts() }
-        // Should fallback to existing data
+        // Should fall back to existing data
         val state = viewModel.postListUiState.value
         assertTrue(state is PostListUiState.Success)
         assertEquals(posts, (state as PostListUiState.Success).posts)
