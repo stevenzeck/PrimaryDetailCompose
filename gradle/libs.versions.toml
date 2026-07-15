@@ -1,11 +1,11 @@
 [versions]
 # Tooling & Plugins
-agp = "9.2.1"
-kotlin = "2.4.0"
+agp = "9.3.0"
+kotlin = "2.4.10"
 ksp = "2.3.9"
 
 # Dependency Injection
-hilt = "2.60"
+hilt = "2.60.1"
 hilt-compose = "1.4.0"
 
 # Compose Stack

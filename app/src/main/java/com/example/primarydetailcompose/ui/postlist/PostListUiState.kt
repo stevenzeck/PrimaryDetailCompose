@@ -1,10 +1,12 @@
 package com.example.primarydetailcompose.ui.postlist
 
+import androidx.compose.runtime.Immutable
 import com.example.primarydetailcompose.model.Post
 
 /**
  * Represents the various UI states for the Post List screen.
  */
+@Immutable
 sealed interface PostListUiState {
 
     /**
@@ -17,6 +19,7 @@ sealed interface PostListUiState {
      *
      * @property posts The list of [Post] objects to display.
      */
+    @Immutable
     data class Success(
         val posts: List<Post>,
     ) : PostListUiState
@@ -26,6 +29,7 @@ sealed interface PostListUiState {
      *
      * @property error The exception causing the failure.
      */
+    @Immutable
     data class Failed(
         val error: Exception,
     ) : PostListUiState
